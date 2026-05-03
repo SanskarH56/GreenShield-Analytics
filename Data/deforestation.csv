@@ -1,0 +1,181 @@
+year,region,forest_area_km2,biodiversity_index,species_count
+2011,Andaman Islands,16465,95.0,548
+2012,Andaman Islands,15815,92.4,533
+2013,Andaman Islands,15605,91.6,528
+2014,Andaman Islands,15454,91.0,525
+2015,Andaman Islands,15256,90.2,520
+2016,Andaman Islands,14786,88.4,510
+2017,Andaman Islands,14568,87.5,505
+2018,Andaman Islands,14378,86.8,501
+2019,Andaman Islands,13922,85.0,490
+2020,Andaman Islands,13818,84.6,488
+2021,Andaman Islands,13327,82.6,476
+2022,Andaman Islands,12852,80.7,466
+2011,Aravallis,13894,79.0,488
+2012,Aravallis,13580,77.5,479
+2013,Aravallis,13393,76.7,474
+2014,Aravallis,13068,75.1,464
+2015,Aravallis,12738,73.6,455
+2016,Aravallis,12420,72.1,445
+2017,Aravallis,12173,70.9,438
+2018,Aravallis,12065,70.4,435
+2019,Aravallis,11678,68.6,424
+2020,Aravallis,11308,66.9,413
+2021,Aravallis,11059,65.7,406
+2022,Aravallis,10910,65.0,402
+2011,Central Highlands,14861,45.0,346
+2012,Central Highlands,14496,43.4,334
+2013,Central Highlands,13990,41.2,317
+2014,Central Highlands,13677,39.8,306
+2015,Central Highlands,13487,39.0,300
+2016,Central Highlands,13029,37.0,284
+2017,Central Highlands,12683,35.5,273
+2018,Central Highlands,12501,35.0,269
+2019,Central Highlands,12085,35.0,269
+2020,Central Highlands,11769,35.0,269
+2021,Central Highlands,11617,35.0,269
+2022,Central Highlands,11397,35.0,269
+2011,Coastal Karnataka,4265,95.0,606
+2012,Coastal Karnataka,4116,95.0,606
+2013,Coastal Karnataka,4083,95.0,606
+2014,Coastal Karnataka,4044,95.0,606
+2015,Coastal Karnataka,4001,95.0,606
+2016,Coastal Karnataka,3907,94.5,603
+2017,Coastal Karnataka,3842,93.6,597
+2018,Coastal Karnataka,3705,91.5,584
+2019,Coastal Karnataka,3642,90.5,577
+2020,Coastal Karnataka,3559,89.2,569
+2021,Coastal Karnataka,3487,88.1,562
+2022,Coastal Karnataka,3387,86.6,552
+2011,Deccan Plateau Edge,8344,89.0,568
+2012,Deccan Plateau Edge,8156,87.5,558
+2013,Deccan Plateau Edge,7982,86.2,550
+2014,Deccan Plateau Edge,7902,85.6,546
+2015,Deccan Plateau Edge,7813,84.9,542
+2016,Deccan Plateau Edge,7663,83.7,534
+2017,Deccan Plateau Edge,7458,82.1,524
+2018,Deccan Plateau Edge,7306,80.9,516
+2019,Deccan Plateau Edge,7096,79.3,506
+2020,Deccan Plateau Edge,6949,78.1,498
+2021,Deccan Plateau Edge,6732,76.4,488
+2022,Deccan Plateau Edge,6496,74.6,476
+2011,Eastern Ghats,7256,95.0,552
+2012,Eastern Ghats,7050,94.2,547
+2013,Eastern Ghats,6902,92.8,539
+2014,Eastern Ghats,6809,92.0,535
+2015,Eastern Ghats,6762,91.6,532
+2016,Eastern Ghats,6619,90.3,525
+2017,Eastern Ghats,6411,88.4,514
+2018,Eastern Ghats,6257,87.1,506
+2019,Eastern Ghats,6083,85.5,497
+2020,Eastern Ghats,5868,83.6,486
+2021,Eastern Ghats,5671,81.8,475
+2022,Eastern Ghats,5565,80.9,470
+2011,Himalayan Foothills,13223,66.0,429
+2012,Himalayan Foothills,12780,63.8,415
+2013,Himalayan Foothills,12502,62.5,406
+2014,Himalayan Foothills,12090,60.4,393
+2015,Himalayan Foothills,11752,58.8,382
+2016,Himalayan Foothills,11473,57.4,373
+2017,Himalayan Foothills,11226,56.2,365
+2018,Himalayan Foothills,10840,54.3,353
+2019,Himalayan Foothills,10780,54.0,351
+2020,Himalayan Foothills,10452,52.4,341
+2021,Himalayan Foothills,10196,51.1,332
+2022,Himalayan Foothills,9901,49.7,323
+2011,Meghalaya Plateau,4818,95.0,572
+2012,Meghalaya Plateau,4769,94.3,568
+2013,Meghalaya Plateau,4713,93.6,564
+2014,Meghalaya Plateau,4610,92.2,555
+2015,Meghalaya Plateau,4559,91.5,551
+2016,Meghalaya Plateau,4415,89.6,539
+2017,Meghalaya Plateau,4263,87.5,527
+2018,Meghalaya Plateau,4208,86.8,523
+2019,Meghalaya Plateau,4074,85.0,512
+2020,Meghalaya Plateau,3984,83.7,504
+2021,Meghalaya Plateau,3935,83.1,500
+2022,Meghalaya Plateau,3828,81.6,491
+2011,Nilgiris,16056,35.0,300
+2012,Nilgiris,15891,35.0,300
+2013,Nilgiris,15687,35.0,300
+2014,Nilgiris,15135,35.0,300
+2015,Nilgiris,14869,35.0,300
+2016,Nilgiris,14658,35.0,300
+2017,Nilgiris,14151,35.0,300
+2018,Nilgiris,14017,35.0,300
+2019,Nilgiris,13643,35.0,300
+2020,Nilgiris,13239,35.0,300
+2021,Nilgiris,13075,35.0,300
+2022,Nilgiris,12829,35.0,300
+2011,Northeast Hills,9946,85.0,550
+2012,Northeast Hills,9717,83.5,540
+2013,Northeast Hills,9521,82.2,532
+2014,Northeast Hills,9318,80.9,523
+2015,Northeast Hills,8974,78.6,509
+2016,Northeast Hills,8826,77.7,503
+2017,Northeast Hills,8686,76.8,497
+2018,Northeast Hills,8567,76.0,492
+2019,Northeast Hills,8375,74.7,483
+2020,Northeast Hills,8293,74.2,480
+2021,Northeast Hills,8055,72.6,470
+2022,Northeast Hills,7808,71.0,459
+2011,Sikkim Highlands,16450,56.0,372
+2012,Sikkim Highlands,16135,54.8,364
+2013,Sikkim Highlands,15754,53.2,353
+2014,Sikkim Highlands,15154,50.9,338
+2015,Sikkim Highlands,14824,49.6,329
+2016,Sikkim Highlands,14626,48.8,324
+2017,Sikkim Highlands,14327,47.6,316
+2018,Sikkim Highlands,13826,45.6,303
+2019,Sikkim Highlands,13340,43.7,290
+2020,Sikkim Highlands,13062,42.6,283
+2021,Sikkim Highlands,12832,41.7,277
+2022,Sikkim Highlands,12493,40.4,268
+2011,Sundarbans,9582,84.0,510
+2012,Sundarbans,9440,83.0,504
+2013,Sundarbans,9095,80.7,490
+2014,Sundarbans,8983,79.9,485
+2015,Sundarbans,8908,79.4,482
+2016,Sundarbans,8666,77.8,472
+2017,Sundarbans,8569,77.1,468
+2018,Sundarbans,8289,75.2,457
+2019,Sundarbans,7986,73.2,444
+2020,Sundarbans,7909,72.7,441
+2021,Sundarbans,7784,71.8,436
+2022,Sundarbans,7653,70.9,430
+2011,Vindyha-Satpura,7105,68.0,450
+2012,Vindyha-Satpura,6853,65.7,435
+2013,Vindyha-Satpura,6771,64.9,429
+2014,Vindyha-Satpura,6630,63.7,422
+2015,Vindyha-Satpura,6534,62.8,416
+2016,Vindyha-Satpura,6373,61.3,406
+2017,Vindyha-Satpura,6217,59.9,396
+2018,Vindyha-Satpura,6045,58.3,386
+2019,Vindyha-Satpura,5914,57.1,378
+2020,Vindyha-Satpura,5744,55.5,367
+2021,Vindyha-Satpura,5697,55.1,365
+2022,Vindyha-Satpura,5490,53.2,352
+2011,Western Ghats North,4388,81.0,520
+2012,Western Ghats North,4315,79.9,513
+2013,Western Ghats North,4195,78.1,501
+2014,Western Ghats North,4124,77.1,495
+2015,Western Ghats North,4049,76.0,488
+2016,Western Ghats North,3943,74.4,478
+2017,Western Ghats North,3882,73.5,472
+2018,Western Ghats North,3766,71.8,461
+2019,Western Ghats North,3657,70.2,451
+2020,Western Ghats North,3607,69.4,446
+2021,Western Ghats North,3555,68.7,441
+2022,Western Ghats North,3531,68.3,438
+2011,Western Ghats South,14394,38.0,339
+2012,Western Ghats South,14145,36.9,329
+2013,Western Ghats South,13970,36.1,322
+2014,Western Ghats South,13613,35.0,312
+2015,Western Ghats South,13305,35.0,312
+2016,Western Ghats South,13092,35.0,312
+2017,Western Ghats South,12795,35.0,312
+2018,Western Ghats South,12483,35.0,312
+2019,Western Ghats South,12132,35.0,312
+2020,Western Ghats South,11784,35.0,312
+2021,Western Ghats South,11383,35.0,312
+2022,Western Ghats South,10943,35.0,312
