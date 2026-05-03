@@ -239,7 +239,7 @@ function renderRankingTable(rows) {
       <td>${row.forestPctChange.toFixed(2)}%</td>
       <td>${row.bioPctChange.toFixed(2)}%</td>
       <td>${row.priorityScore.toFixed(2)}</td>
-      <td>${status}</td>
+      <td class="status-${status.toLowerCase()}">${status}</td>
     `;
 
     tableBody.appendChild(tr);
