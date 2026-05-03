@@ -52,18 +52,27 @@
     <section class="controls-card">
       <div class="control-group">
         <label for="thresholdSlider">
-          Alert Threshold: <span id="thresholdValue">-10%</span>
+          Alert Threshold: <span id="thresholdValue">-2%</span>
         </label>
         <input 
-          type="range" 
-          id="thresholdSlider" 
-          min="-50" 
-          max="0" 
-          value="-10"
+            type="range" 
+            id="thresholdSlider" 
+            min="-6" 
+            max="0" 
+            step="0.1"
+            value="-2"
         />
       </div>
 
       <div class="control-group">
+        <div class="control-group">
+        <label for="metricSelector">Chart Metric</label>
+        <select id="metricSelector">
+            <option value="forest_area">Forest Area</option>
+            <option value="biodiversity_index">Biodiversity Index</option>
+            <option value="priorityScore">Priority Score</option>
+        </select>
+        </div>
         <label for="regionFilter">Region Filter</label>
         <select id="regionFilter">
           <option value="all">All Regions</option>
@@ -121,4 +130,4 @@
 
   <script src="script.js"></script>
 </body>
-</html>ssssss
+</html>

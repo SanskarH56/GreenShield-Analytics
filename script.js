@@ -106,12 +106,19 @@ function populateRegionFilter(data) {
 
 function renderChart(data) {
   const selectedRegion = document.getElementById("regionFilter").value;
+  const selectedMetric = document.getElementById("metricSelector").value;
 
   let chartData = data;
 
   if (selectedRegion !== "all") {
     chartData = data.filter(row => row.region === selectedRegion);
   }
+
+  const metricLabels = {
+    forest_area: "Forest Area (km²)",
+    biodiversity_index: "Biodiversity Index",
+    priorityScore: "Priority Score"
+  };
 
   const regions = [...new Set(chartData.map(row => row.region))];
   const years = [...new Set(chartData.map(row => row.year))].sort((a, b) => a - b);
@@ -123,7 +130,7 @@ function renderChart(data) {
       label: region,
       data: years.map(year => {
         const item = regionRows.find(row => row.year === year);
-        return item ? item.forest_area : null;
+        return item ? item[selectedMetric] : null;
       }),
       borderWidth: 2,
       tension: 0.3
@@ -147,12 +154,13 @@ function renderChart(data) {
       plugins: {
         title: {
           display: true,
-          text: "Forest Cover Change Over Time"
+          text: `${metricLabels[selectedMetric]} Over Time`
         },
         tooltip: {
           callbacks: {
             label: function (context) {
-              return `${context.dataset.label}: ${context.raw} km²`;
+              const value = Number(context.raw).toFixed(2);
+              return `${context.dataset.label}: ${value}`;
             }
           }
         }
@@ -161,7 +169,7 @@ function renderChart(data) {
         y: {
           title: {
             display: true,
-            text: "Forest Area (km²)"
+            text: metricLabels[selectedMetric]
           }
         },
         x: {
@@ -259,4 +267,8 @@ document.getElementById("thresholdSlider").addEventListener("input", function ()
 document.getElementById("regionFilter").addEventListener("change", function () {
   renderChart(window.dashboardData);
   updateDashboard(window.dashboardData);
+});
+
+document.getElementById("metricSelector").addEventListener("change", function () {
+  renderChart(window.dashboardData);
 });
