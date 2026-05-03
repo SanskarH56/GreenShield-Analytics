@@ -1,4 +1,23 @@
 let forestChart = null;
+let priorityChart = null;
+
+const chartColors = [
+  "#1b5e20",
+  "#2e7d32",
+  "#66bb6a",
+  "#a5d6a7",
+  "#00695c",
+  "#26a69a",
+  "#6d4c41",
+  "#8d6e63",
+  "#558b2f",
+  "#9ccc65",
+  "#33691e",
+  "#43a047",
+  "#00796b",
+  "#795548",
+  "#827717"
+];
 
 Papa.parse("Data/deforestation.csv", {
   download: true,
@@ -12,11 +31,13 @@ Papa.parse("Data/deforestation.csv", {
     const processedData = processData(data);
 
     window.dashboardData = processedData;
+    renderPriorityChart(processedData);
 
     updateKpiCards(processedData);
     populateRegionFilter(processedData);
     renderChart(processedData);
     updateDashboard(processedData);
+    renderInsights(processedData);
   }
 });
 
@@ -123,17 +144,21 @@ function renderChart(data) {
   const regions = [...new Set(chartData.map(row => row.region))];
   const years = [...new Set(chartData.map(row => row.year))].sort((a, b) => a - b);
 
-  const datasets = regions.map(region => {
+  const datasets = regions.map((region, index) => {
     const regionRows = chartData.filter(row => row.region === region);
 
-    return {
+   return {
       label: region,
       data: years.map(year => {
         const item = regionRows.find(row => row.year === year);
         return item ? item[selectedMetric] : null;
       }),
-      borderWidth: 2,
-      tension: 0.3
+        borderColor: chartColors[index % chartColors.length],
+        backgroundColor: chartColors[index % chartColors.length],
+        pointRadius: 3,
+        pointHoverRadius: 6,
+        borderWidth: 2,
+        tension: 0.3
     };
   });
 
@@ -183,6 +208,57 @@ function renderChart(data) {
   });
 }
 
+function renderPriorityChart(data) {
+  const latestRows = getLatestRows(data);
+
+  const sorted = [...latestRows].sort((a, b) => b.priorityScore - a.priorityScore);
+
+  const labels = sorted.map(row => row.region);
+  const values = sorted.map(row => row.priorityScore);
+
+  const ctx = document.getElementById("priorityChart");
+
+  if (priorityChart) {
+    priorityChart.destroy();
+  }
+
+  priorityChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "Priority Score",
+        data: values,
+        borderRadius: 6,
+        borderWidth: 1,
+        borderColor: "#333",
+        backgroundColor: sorted.map(row => {
+            if (row.priorityScore >= 10) return "#d62828";
+            if (row.priorityScore >= 6) return "#f77f00";
+            return "#2a9d8f";
+        })
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: "Priority Score Ranking"
+        }
+      },
+      scales: {
+        y: {
+          title: {
+            display: true,
+            text: "Priority Score"
+          }
+        }
+      }
+    }
+  });
+}
+
 function updateDashboard(data) {
   const threshold = Number(document.getElementById("thresholdSlider").value);
   const selectedRegion = document.getElementById("regionFilter").value;
@@ -203,6 +279,8 @@ function updateDashboard(data) {
 
   renderAlerts(alerts);
   renderRankingTable(latestRows);
+  renderPriorityChart(filteredData);
+  renderInsights(filteredData);
 }
 
 function renderAlerts(alerts) {
@@ -251,6 +329,50 @@ function renderRankingTable(rows) {
     `;
 
     tableBody.appendChild(tr);
+  });
+}
+
+function generateInsights(data) {
+  const latestRows = getLatestRows(data);
+
+  if (latestRows.length === 0) return [];
+
+  // 1. Worst forest loss
+  const worstLoss = latestRows.reduce((min, row) =>
+    row.forestPctChange < min.forestPctChange ? row : min
+  );
+
+  // 2. Highest priority
+  const highestPriority = latestRows.reduce((max, row) =>
+    row.priorityScore > max.priorityScore ? row : max
+  );
+
+  // 3. Count critical regions
+  const criticalCount = latestRows.filter(row => row.priorityScore >= 10).length;
+
+  // 4. Most stable region
+  const stableRegion = latestRows.reduce((min, row) =>
+    row.priorityScore < min.priorityScore ? row : min
+  );
+
+  return [
+    `${worstLoss.region} shows the highest forest loss (${worstLoss.forestPctChange.toFixed(2)}%).`,
+    `${highestPriority.region} has the highest priority score (${highestPriority.priorityScore.toFixed(2)}).`,
+    `${criticalCount} region(s) are currently in critical condition.`,
+    `${stableRegion.region} appears the most stable based on current metrics.`
+  ];
+}
+
+function renderInsights(data) {
+  const insightList = document.getElementById("insightList");
+  const insights = generateInsights(data);
+
+  insightList.innerHTML = "";
+
+  insights.forEach(text => {
+    const li = document.createElement("li");
+    li.textContent = text;
+    insightList.appendChild(li);
   });
 }
 
