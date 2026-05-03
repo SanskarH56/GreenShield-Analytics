@@ -1,4 +1,4 @@
-year,region,forest_area_km2,biodiversity_index,species_count
+year,region,forest_area,biodiversity_index,species_count
 2011,Andaman Islands,16465,95.0,548
 2012,Andaman Islands,15815,92.4,533
 2013,Andaman Islands,15605,91.6,528
