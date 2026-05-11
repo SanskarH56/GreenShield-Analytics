@@ -4,142 +4,242 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GreenShield Analytics</title>
-
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
-
-  <!-- Chart.js for line chart -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- PapaParse for reading CSV -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
-
 <body>
+
+  <!-- Animated forest canopy background -->
+  <div class="canopy-bg">
+    <div class="tree t1"></div>
+    <div class="tree t2"></div>
+    <div class="tree t3"></div>
+    <div class="tree t4"></div>
+    <div class="tree t5"></div>
+    <div class="tree t6"></div>
+    <div class="canopy-overlay"></div>
+  </div>
+
+  <!-- Particles -->
+  <div class="particles" id="particles"></div>
+
   <div class="dashboard">
 
     <!-- Header -->
     <header class="header">
-      <div>
-        <h1>🌿 GreenShield Analytics</h1>
-        <p>
-          Monitor forest loss, biodiversity decline, and regional conservation priority
-          through interactive environmental intelligence.
-        </p>
+      <div class="header-inner">
+        <div class="header-badge">🌿 Environmental Intelligence</div>
+        <h1 class="header-title">GreenShield<br><em>Analytics</em></h1>
+        <p class="header-desc">Monitor forest loss, biodiversity decline, and conservation priority across India's critical ecological zones in real time.</p>
+        <div class="header-stats-row" id="headerLiveStats">
+          <div class="hstat"><span class="hstat-num" id="hLiveRegions">—</span><span class="hstat-label">Regions</span></div>
+          <div class="hstat-div"></div>
+          <div class="hstat"><span class="hstat-num" id="hLiveYears">—</span><span class="hstat-label">Years of Data</span></div>
+          <div class="hstat-div"></div>
+          <div class="hstat"><span class="hstat-num" id="hLiveCritical">—</span><span class="hstat-label">Critical Zones</span></div>
+        </div>
+      </div>
+      <div class="header-deco">
+        <div class="ring r1"></div>
+        <div class="ring r2"></div>
+        <div class="ring r3"></div>
+        <span class="deco-leaf l1">🌿</span>
+        <span class="deco-leaf l2">🍃</span>
+        <span class="deco-leaf l3">🌱</span>
       </div>
     </header>
 
     <!-- KPI Cards -->
     <section class="kpi-grid">
-      <div class="kpi-card">
-        <h3>Total Regions</h3>
-        <p id="totalRegions">--</p>
+      <div class="kpi-card kpi-1">
+        <div class="kpi-icon">🌍</div>
+        <div class="kpi-body">
+          <div class="kpi-label">Total Regions</div>
+          <div class="kpi-value" id="totalRegions">--</div>
+        </div>
+        <div class="kpi-glow"></div>
       </div>
-
-      <div class="kpi-card">
-        <h3>Worst Region</h3>
-        <p id="worstRegion">--</p>
+      <div class="kpi-card kpi-2">
+        <div class="kpi-icon">⚠️</div>
+        <div class="kpi-body">
+          <div class="kpi-label">Worst Region</div>
+          <div class="kpi-value kpi-danger" id="worstRegion">--</div>
+        </div>
+        <div class="kpi-glow"></div>
       </div>
-
-      <div class="kpi-card">
-        <h3>Highest Forest Loss</h3>
-        <p id="highestLoss">--</p>
+      <div class="kpi-card kpi-3">
+        <div class="kpi-icon">📉</div>
+        <div class="kpi-body">
+          <div class="kpi-label">Highest Forest Loss</div>
+          <div class="kpi-value kpi-danger" id="highestLoss">--</div>
+        </div>
+        <div class="kpi-glow"></div>
       </div>
-
-      <div class="kpi-card">
-        <h3>Critical Alerts</h3>
-        <p id="criticalAlerts">--</p>
+      <div class="kpi-card kpi-4">
+        <div class="kpi-icon">🚨</div>
+        <div class="kpi-body">
+          <div class="kpi-label">Critical Alerts</div>
+          <div class="kpi-value" id="criticalAlerts">--</div>
+        </div>
+        <div class="kpi-glow"></div>
+      </div>
+      <div class="kpi-card kpi-5">
+        <div class="kpi-icon">🦋</div>
+        <div class="kpi-body">
+          <div class="kpi-label">Avg Biodiversity</div>
+          <div class="kpi-value" id="avgBiodiversity">--</div>
+        </div>
+        <div class="kpi-glow"></div>
+      </div>
+      <div class="kpi-card kpi-6">
+        <div class="kpi-icon">✅</div>
+        <div class="kpi-body">
+          <div class="kpi-label">Stable Zones</div>
+          <div class="kpi-value kpi-stable" id="stableZones">--</div>
+        </div>
+        <div class="kpi-glow"></div>
       </div>
     </section>
 
     <!-- Controls -->
-    <section class="controls-card">
-      <div class="control-group">
-        <label for="thresholdSlider">
-          Alert Threshold: <span id="thresholdValue">-2%</span>
-        </label>
-        <input 
-            type="range" 
-            id="thresholdSlider" 
-            min="-6" 
-            max="0" 
-            step="0.1"
-            value="-2"
-        />
+    <section class="controls-card glass-card">
+      <div class="controls-title">
+        <span class="ctrl-icon">🎛️</span> Dashboard Controls
       </div>
-
-      <div class="control-group">
+      <div class="controls-grid">
         <div class="control-group">
-        <label for="metricSelector">Chart Metric</label>
-        <select id="metricSelector">
-            <option value="forest_area">Forest Area</option>
-            <option value="biodiversity_index">Biodiversity Index</option>
-            <option value="priorityScore">Priority Score</option>
-        </select>
+          <label>Alert Threshold <span class="ctrl-val" id="thresholdValue">-2%</span></label>
+          <input type="range" id="thresholdSlider" min="-6" max="0" step="0.1" value="-2" />
+          <div class="range-ticks"><span>-6%</span><span>-3%</span><span>0%</span></div>
         </div>
-        <label for="regionFilter">Region Filter</label>
-        <select id="regionFilter">
-          <option value="all">All Regions</option>
-        </select>
+        <div class="control-group">
+          <label>Chart Metric</label>
+          <select id="metricSelector">
+            <option value="forest_area">🌲 Forest Area (km²)</option>
+            <option value="biodiversity_index">🦋 Biodiversity Index</option>
+            <option value="priorityScore">🎯 Priority Score</option>
+            <option value="species_count">🐦 Species Count</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Region Filter</label>
+          <select id="regionFilter">
+            <option value="all">🌐 All Regions</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Chart Type</label>
+          <select id="chartTypeSelector">
+            <option value="line">📈 Line Chart</option>
+            <option value="bar">📊 Bar Chart</option>
+            <option value="area">🏔️ Area Chart</option>
+          </select>
+        </div>
       </div>
     </section>
 
-    <!-- Chart -->
-    <section class="chart-card">
-      <h2>Forest Area Trend</h2>
-      <canvas id="forestChart"></canvas>
-    </section>
+    <!-- Charts row -->
+    <div class="charts-row">
+      <section class="chart-card glass-card">
+        <div class="chart-header">
+          <h2>Metric Trend Over Time</h2>
+          <div class="chart-subtitle" id="chartSubtitle">All Regions · Forest Area</div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="forestChart"></canvas>
+        </div>
+      </section>
 
-    <section class="chart-card">
-      <h2>Priority Score by Region</h2>
-      <canvas id="priorityChart"></canvas>
-    </section>
+      <section class="chart-card glass-card">
+        <div class="chart-header">
+          <h2>Priority Score Ranking</h2>
+          <div class="chart-subtitle">By Region · Latest Year</div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="priorityChart"></canvas>
+        </div>
+      </section>
+    </div>
 
-    <section class="info-card">
-      <h2>Key Insights</h2>
-      <ul id="insightList">
-        <li>Loading insights...</li>
-      </ul>
-    </section>
+    <!-- Biodiversity radar + sparklines row -->
+    <div class="charts-row">
+      <section class="chart-card glass-card">
+        <div class="chart-header">
+          <h2>Biodiversity vs Forest Loss</h2>
+          <div class="chart-subtitle">Scatter Analysis · Latest Year</div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="scatterChart"></canvas>
+        </div>
+      </section>
+
+      <section class="glass-card insights-card">
+        <div class="chart-header">
+          <h2>🔍 AI Insights</h2>
+          <div class="chart-subtitle">Generated from your data</div>
+        </div>
+        <ul id="insightList">
+          <li class="insight-loading">Analysing data...</li>
+        </ul>
+        <div class="legend-section">
+          <div class="legend-title">Risk Severity</div>
+          <div class="legend-items">
+            <span class="legend-badge stable">🟢 Stable</span>
+            <span class="legend-badge warning">🟡 Warning</span>
+            <span class="legend-badge critical">🔴 Critical</span>
+          </div>
+        </div>
+      </section>
+    </div>
 
     <!-- Alerts -->
-    <section class="alerts-card">
-      <h2>Deforestation Alerts</h2>
-      <div id="alertsContainer">
-        <p>No alerts yet.</p>
+    <section class="alerts-card glass-card">
+      <div class="alerts-header">
+        <h2>⚡ Deforestation Alerts</h2>
+        <div class="alerts-count" id="alertCountBadge">0 active</div>
+      </div>
+      <div id="alertsContainer" class="alerts-grid">
+        <p class="no-alerts">No alerts for current threshold.</p>
       </div>
     </section>
 
-    <!-- Ranked Table -->
-    <section class="table-card">
-      <h2>Priority Ranking</h2>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Rank</th>
-            <th>Region</th>
-            <th>Latest Year</th>
-            <th>Forest Change %</th>
-            <th>Biodiversity Change %</th>
-            <th>Priority Score</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-
-        <tbody id="rankingTableBody">
-          <!-- JS will fill this -->
-        </tbody>
-      </table>
+    <!-- Table -->
+    <section class="table-card glass-card">
+      <div class="table-header-row">
+        <h2>📋 Priority Ranking</h2>
+        <input type="text" id="tableSearch" placeholder="🔍 Search region..." />
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Region</th>
+              <th>Year</th>
+              <th>Forest Δ%</th>
+              <th>Bio Δ%</th>
+              <th>Species</th>
+              <th>Priority</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="rankingTableBody"></tbody>
+        </table>
+      </div>
     </section>
 
-    <!-- Explanation -->
-    <section class="info-card">
-      <h2>How Priority Score Works</h2>
-      <p>
-        The priority score combines forest loss, biodiversity decline, and current biodiversity condition.
-        Higher score means the region needs more urgent attention.
-      </p>
-    </section>
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-inner">
+        <span>🌿 GreenShield Analytics</span>
+        <span>Data: India Forest Survey · 2011–2022</span>
+        <span>Built for Conservation Intelligence</span>
+      </div>
+    </footer>
 
   </div>
 

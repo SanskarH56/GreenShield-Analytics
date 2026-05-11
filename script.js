@@ -1,396 +1,533 @@
+/* ── GreenShield Analytics */
+
 let forestChart = null;
 let priorityChart = null;
+let scatterChart = null;
 
+// Lush forest palette
 const chartColors = [
-  "#1b5e20",
-  "#2e7d32",
-  "#66bb6a",
-  "#a5d6a7",
-  "#00695c",
-  "#26a69a",
-  "#6d4c41",
-  "#8d6e63",
-  "#558b2f",
-  "#9ccc65",
-  "#33691e",
-  "#43a047",
-  "#00796b",
-  "#795548",
-  "#827717"
+  "#56e07e","#4caf6e","#38b2ac","#81e6d9",
+  "#f6ad55","#fc8181","#b794f4","#63b3ed",
+  "#68d391","#fbd38d","#90cdf4","#e2b96f",
+  "#a3bffa","#9ae6b4","#fed7aa"
 ];
 
+// ── Particles ──────────────────────────────────────────
+function spawnParticles() {
+  const container = document.getElementById("particles");
+  for (let i = 0; i < 22; i++) {
+    const p = document.createElement("div");
+    p.className = "particle";
+    const size = Math.random() * 3 + 1;
+    p.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%;
+      animation-duration:${Math.random()*12+8}s;
+      animation-delay:${Math.random()*10}s;
+    `;
+    container.appendChild(p);
+  }
+}
+spawnParticles();
+
+// ── Load CSV ───────────────────────────────────────────
 Papa.parse("Data/deforestation.csv", {
   download: true,
   header: true,
   dynamicTyping: true,
   complete: function (results) {
-    let data = results.data;
+    let data = results.data.filter(row => row.year && row.region);
+    const processed = processData(data);
+    window.dashboardData = processed;
 
-    data = data.filter(row => row.year && row.region);
-
-    const processedData = processData(data);
-
-    window.dashboardData = processedData;
-    renderPriorityChart(processedData);
-
-    updateKpiCards(processedData);
-    populateRegionFilter(processedData);
-    renderChart(processedData);
-    updateDashboard(processedData);
-    renderInsights(processedData);
+    updateKpiCards(processed);
+    populateRegionFilter(processed);
+    renderChart(processed);
+    renderPriorityChart(processed);
+    renderScatterChart(processed);
+    renderInsights(processed);
+    updateDashboard(processed);
+    setupTableSearch();
   }
 });
 
+// ── Data Processing ────────────────────────────────────
 function processData(data) {
   const grouped = {};
-
   data.forEach(row => {
-    if (!grouped[row.region]) {
-      grouped[row.region] = [];
-    }
-
+    if (!grouped[row.region]) grouped[row.region] = [];
     grouped[row.region].push(row);
   });
 
   Object.values(grouped).forEach(rows => {
     rows.sort((a, b) => a.year - b.year);
-
-    for (let i = 0; i < rows.length; i++) {
+    rows.forEach((row, i) => {
       if (i === 0) {
-        rows[i].forestPctChange = 0;
-        rows[i].bioPctChange = 0;
+        row.forestPctChange = 0;
+        row.bioPctChange = 0;
       } else {
         const prev = rows[i - 1];
-
-        rows[i].forestPctChange =
-          ((rows[i].forest_area - prev.forest_area) / prev.forest_area) * 100;
-
-        rows[i].bioPctChange =
-          ((rows[i].biodiversity_index - prev.biodiversity_index) / prev.biodiversity_index) * 100;
+        row.forestPctChange = ((row.forest_area - prev.forest_area) / prev.forest_area) * 100;
+        row.bioPctChange    = ((row.biodiversity_index - prev.biodiversity_index) / prev.biodiversity_index) * 100;
       }
-
-      rows[i].priorityScore = calculatePriorityScore(rows[i]);
-    }
+      row.priorityScore = calcPriority(row);
+    });
   });
-
   return Object.values(grouped).flat();
 }
 
-function calculatePriorityScore(row) {
+function calcPriority(row) {
   return (
     Math.abs(row.forestPctChange) * 0.5 +
-    Math.abs(row.bioPctChange) * 0.3 +
+    Math.abs(row.bioPctChange)    * 0.3 +
     (100 - row.biodiversity_index) * 0.2
   );
 }
 
 function getLatestRows(data) {
-  const latestByRegion = {};
-
+  const map = {};
   data.forEach(row => {
-    if (
-      !latestByRegion[row.region] ||
-      row.year > latestByRegion[row.region].year
-    ) {
-      latestByRegion[row.region] = row;
-    }
+    if (!map[row.region] || row.year > map[row.region].year)
+      map[row.region] = row;
   });
-
-  return Object.values(latestByRegion);
+  return Object.values(map);
 }
 
+// ── KPI Cards ──────────────────────────────────────────
 function updateKpiCards(data) {
-  const latestRows = getLatestRows(data);
-  const totalRegions = new Set(data.map(row => row.region)).size;
+  const latest   = getLatestRows(data);
+  const regions  = new Set(data.map(r => r.region));
+  const years    = new Set(data.map(r => r.year));
 
-  const worstRegion = latestRows.reduce((worst, row) => {
-    return row.forestPctChange < worst.forestPctChange ? row : worst;
-  }, latestRows[0]);
+  const worst = latest.reduce((w, r) =>
+    r.forestPctChange < w.forestPctChange ? r : w, latest[0]);
 
-  document.getElementById("totalRegions").innerText = totalRegions;
-  document.getElementById("worstRegion").innerText = worstRegion.region;
-  document.getElementById("highestLoss").innerText =
-    `${worstRegion.forestPctChange.toFixed(2)}%`;
+  const avgBio = (latest.reduce((s, r) => s + r.biodiversity_index, 0) / latest.length).toFixed(1);
+  const stableCount  = latest.filter(r => r.priorityScore < 6).length;
+  const criticalCount = latest.filter(r => r.priorityScore >= 10).length;
+
+  setEl("totalRegions",    regions.size);
+  setEl("worstRegion",     worst.region);
+  setEl("highestLoss",     worst.forestPctChange.toFixed(2) + "%");
+  setEl("criticalAlerts",  criticalCount);
+  setEl("avgBiodiversity", avgBio);
+  setEl("stableZones",     stableCount);
+
+  // header live stats
+  setEl("hLiveRegions",  regions.size);
+  setEl("hLiveYears",    years.size);
+  setEl("hLiveCritical", criticalCount);
+
+  // animate numbers
+  animateNumbers();
 }
 
-function populateRegionFilter(data) {
-  const regionFilter = document.getElementById("regionFilter");
-  const regions = [...new Set(data.map(row => row.region))];
+function setEl(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
 
-  regions.forEach(region => {
-    const option = document.createElement("option");
-    option.value = region;
-    option.textContent = region;
-    regionFilter.appendChild(option);
+function animateNumbers() {
+  document.querySelectorAll(".kpi-value").forEach(el => {
+    el.style.animation = "none";
+    el.offsetHeight; // reflow
+    el.style.animation = "fadeIn 0.5s ease";
   });
 }
 
+// ── Region Filter ──────────────────────────────────────
+function populateRegionFilter(data) {
+  const sel = document.getElementById("regionFilter");
+  const regions = [...new Set(data.map(r => r.region))].sort();
+  regions.forEach(region => {
+    const opt = document.createElement("option");
+    opt.value = region;
+    opt.textContent = region;
+    sel.appendChild(opt);
+  });
+}
+
+// ── Line / Area Chart ──────────────────────────────────
 function renderChart(data) {
-  const selectedRegion = document.getElementById("regionFilter").value;
-  const selectedMetric = document.getElementById("metricSelector").value;
+  const selRegion = document.getElementById("regionFilter").value;
+  const selMetric = document.getElementById("metricSelector").value;
+  const selType   = document.getElementById("chartTypeSelector").value;
 
-  let chartData = data;
-
-  if (selectedRegion !== "all") {
-    chartData = data.filter(row => row.region === selectedRegion);
-  }
+  let chartData = selRegion === "all" ? data : data.filter(r => r.region === selRegion);
 
   const metricLabels = {
-    forest_area: "Forest Area (km²)",
+    forest_area:        "Forest Area (km²)",
     biodiversity_index: "Biodiversity Index",
-    priorityScore: "Priority Score"
+    priorityScore:      "Priority Score",
+    species_count:      "Species Count"
   };
 
-  const regions = [...new Set(chartData.map(row => row.region))];
-  const years = [...new Set(chartData.map(row => row.year))].sort((a, b) => a - b);
+  const regions = [...new Set(chartData.map(r => r.region))];
+  const years   = [...new Set(chartData.map(r => r.year))].sort((a,b) => a - b);
 
-  const datasets = regions.map((region, index) => {
-    const regionRows = chartData.filter(row => row.region === region);
+  // for area charts, limit to single region or top 5
+  const visRegions = selRegion === "all" ? regions.slice(0, 8) : regions;
 
-   return {
+  const datasets = visRegions.map((region, idx) => {
+    const rows = chartData.filter(r => r.region === region);
+    const color = chartColors[idx % chartColors.length];
+    const isArea = selType === "area";
+    return {
       label: region,
-      data: years.map(year => {
-        const item = regionRows.find(row => row.year === year);
-        return item ? item[selectedMetric] : null;
-      }),
-        borderColor: chartColors[index % chartColors.length],
-        backgroundColor: chartColors[index % chartColors.length],
-        pointRadius: 3,
-        pointHoverRadius: 6,
-        borderWidth: 2,
-        tension: 0.3
+      data: years.map(y => { const row = rows.find(r => r.year === y); return row ? row[selMetric] : null; }),
+      borderColor: color,
+      backgroundColor: isArea ? hexAlpha(color, 0.15) : hexAlpha(color, 0.8),
+      pointRadius: 3,
+      pointHoverRadius: 6,
+      borderWidth: 2,
+      tension: 0.4,
+      fill: isArea ? "origin" : false,
+      spanGaps: true
     };
   });
 
   const ctx = document.getElementById("forestChart");
+  if (forestChart) forestChart.destroy();
 
-  if (forestChart) {
-    forestChart.destroy();
-  }
+  const type = selType === "area" ? "line" : selType;
 
   forestChart = new Chart(ctx, {
-    type: "line",
+    type: type,
+    data: { labels: years, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: {
+          display: visRegions.length <= 6,
+          labels: {
+            color: "#9ab89a",
+            font: { family: "'DM Sans'", size: 11 },
+            boxWidth: 12, boxHeight: 12,
+            borderRadius: 3
+          }
+        },
+        tooltip: {
+          backgroundColor: "rgba(10,31,15,0.95)",
+          borderColor: "rgba(86,224,126,0.3)",
+          borderWidth: 1,
+          titleColor: "#56e07e",
+          bodyColor: "#e8f5e0",
+          padding: 12,
+          callbacks: {
+            label: ctx => `${ctx.dataset.label}: ${Number(ctx.raw).toFixed(2)}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: "#9ab89a", font: { family: "'DM Mono'", size: 11 } },
+          grid:  { color: "rgba(86,224,126,0.06)" }
+        },
+        y: {
+          ticks: { color: "#9ab89a", font: { family: "'DM Mono'", size: 11 } },
+          grid:  { color: "rgba(86,224,126,0.06)" },
+          title: { display: true, text: metricLabels[selMetric], color: "#9ab89a", font: { size: 11 } }
+        }
+      }
+    }
+  });
+
+  // update subtitle
+  const sub = document.getElementById("chartSubtitle");
+  if (sub) sub.textContent = `${selRegion === "all" ? "All Regions" : selRegion} · ${metricLabels[selMetric]}`;
+}
+
+// ── Priority Bar Chart ─────────────────────────────────
+function renderPriorityChart(data) {
+  const latest = getLatestRows(data);
+  const sorted = [...latest].sort((a, b) => b.priorityScore - a.priorityScore);
+
+  const labels = sorted.map(r => r.region);
+  const values = sorted.map(r => r.priorityScore);
+  const colors = sorted.map(r =>
+    r.priorityScore >= 10 ? "#e53e3e" :
+    r.priorityScore >=  6 ? "#f6ad55" : "#38b2ac"
+  );
+  const borderColors = colors.map(c => c);
+
+  const ctx = document.getElementById("priorityChart");
+  if (priorityChart) priorityChart.destroy();
+
+  priorityChart = new Chart(ctx, {
+    type: "bar",
     data: {
-      labels: years,
-      datasets: datasets
+      labels,
+      datasets: [{
+        label: "Priority Score",
+        data: values,
+        backgroundColor: colors.map(c => hexAlpha(c, 0.7)),
+        borderColor: borderColors,
+        borderWidth: 1.5,
+        borderRadius: 6,
+        borderSkipped: false
+      }]
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
-        title: {
-          display: true,
-          text: `${metricLabels[selectedMetric]} Over Time`
-        },
+        legend: { display: false },
         tooltip: {
+          backgroundColor: "rgba(10,31,15,0.95)",
+          borderColor: "rgba(86,224,126,0.3)",
+          borderWidth: 1,
+          titleColor: "#56e07e",
+          bodyColor: "#e8f5e0",
+          padding: 12,
           callbacks: {
-            label: function (context) {
-              const value = Number(context.raw).toFixed(2);
-              return `${context.dataset.label}: ${value}`;
+            label: ctx => `Score: ${Number(ctx.raw).toFixed(2)}`,
+            afterLabel: ctx => {
+              const s = Number(ctx.raw);
+              return s >= 10 ? "Status: 🔴 Critical" : s >= 6 ? "Status: 🟡 Warning" : "Status: 🟢 Stable";
             }
           }
         }
       },
       scales: {
-        y: {
-          title: {
-            display: true,
-            text: metricLabels[selectedMetric]
-          }
-        },
         x: {
-          title: {
-            display: true,
-            text: "Year"
-          }
+          ticks: { color: "#9ab89a", font: { family: "'DM Sans'", size: 10 }, maxRotation: 40 },
+          grid: { display: false }
+        },
+        y: {
+          ticks: { color: "#9ab89a", font: { family: "'DM Mono'", size: 11 } },
+          grid: { color: "rgba(86,224,126,0.06)" },
+          title: { display: true, text: "Priority Score", color: "#9ab89a", font: { size: 11 } }
         }
       }
     }
   });
 }
 
-function renderPriorityChart(data) {
-  const latestRows = getLatestRows(data);
+// ── Scatter Chart (Biodiversity vs Forest Loss) ────────
+function renderScatterChart(data) {
+  const latest = getLatestRows(data);
 
-  const sorted = [...latestRows].sort((a, b) => b.priorityScore - a.priorityScore);
+  const scatterData = latest.map(r => ({
+    x: r.forestPctChange,
+    y: r.biodiversity_index,
+    label: r.region,
+    score: r.priorityScore
+  }));
 
-  const labels = sorted.map(row => row.region);
-  const values = sorted.map(row => row.priorityScore);
+  const ctx = document.getElementById("scatterChart");
+  if (scatterChart) scatterChart.destroy();
 
-  const ctx = document.getElementById("priorityChart");
-
-  if (priorityChart) {
-    priorityChart.destroy();
-  }
-
-  priorityChart = new Chart(ctx, {
-    type: "bar",
+  scatterChart = new Chart(ctx, {
+    type: "scatter",
     data: {
-      labels: labels,
       datasets: [{
-        label: "Priority Score",
-        data: values,
-        borderRadius: 6,
-        borderWidth: 1,
-        borderColor: "#333",
-        backgroundColor: sorted.map(row => {
-            if (row.priorityScore >= 10) return "#d62828";
-            if (row.priorityScore >= 6) return "#f77f00";
-            return "#2a9d8f";
-        })
+        label: "Regions",
+        data: scatterData.map(d => ({ x: d.x, y: d.y })),
+        backgroundColor: scatterData.map(d =>
+          d.score >= 10 ? hexAlpha("#e53e3e", 0.7) :
+          d.score >=  6 ? hexAlpha("#f6ad55", 0.7) :
+                          hexAlpha("#38b2ac", 0.7)
+        ),
+        borderColor: scatterData.map(d =>
+          d.score >= 10 ? "#e53e3e" : d.score >= 6 ? "#f6ad55" : "#38b2ac"
+        ),
+        borderWidth: 1.5,
+        pointRadius: 7,
+        pointHoverRadius: 10
       }]
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
-        title: {
-          display: true,
-          text: "Priority Score Ranking"
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "rgba(10,31,15,0.95)",
+          borderColor: "rgba(86,224,126,0.3)",
+          borderWidth: 1,
+          titleColor: "#56e07e",
+          bodyColor: "#e8f5e0",
+          padding: 12,
+          callbacks: {
+            label: (ctx) => {
+              const d = scatterData[ctx.dataIndex];
+              return [
+                `Region: ${d.label}`,
+                `Forest Δ: ${d.x.toFixed(2)}%`,
+                `Biodiversity: ${d.y.toFixed(1)}`,
+                `Priority: ${d.score.toFixed(2)}`
+              ];
+            }
+          }
         }
       },
       scales: {
+        x: {
+          title: { display: true, text: "Forest Change %", color: "#9ab89a", font: { size: 11 } },
+          ticks: { color: "#9ab89a", font: { family: "'DM Mono'", size: 11 } },
+          grid: { color: "rgba(86,224,126,0.06)" }
+        },
         y: {
-          title: {
-            display: true,
-            text: "Priority Score"
-          }
+          title: { display: true, text: "Biodiversity Index", color: "#9ab89a", font: { size: 11 } },
+          ticks: { color: "#9ab89a", font: { family: "'DM Mono'", size: 11 } },
+          grid: { color: "rgba(86,224,126,0.06)" }
         }
       }
     }
   });
 }
 
+// ── Update Dashboard ───────────────────────────────────
 function updateDashboard(data) {
   const threshold = Number(document.getElementById("thresholdSlider").value);
-  const selectedRegion = document.getElementById("regionFilter").value;
+  const selRegion = document.getElementById("regionFilter").value;
 
-  document.getElementById("thresholdValue").innerText = `${threshold}%`;
+  document.getElementById("thresholdValue").textContent = `${threshold}%`;
 
-  let filteredData = data;
+  let filtered = selRegion === "all" ? data : data.filter(r => r.region === selRegion);
+  const latest  = getLatestRows(filtered);
+  const alerts  = latest.filter(r => r.forestPctChange <= threshold);
 
-  if (selectedRegion !== "all") {
-    filteredData = data.filter(row => row.region === selectedRegion);
-  }
-
-  const latestRows = getLatestRows(filteredData);
-
-  const alerts = latestRows.filter(row => row.forestPctChange <= threshold);
-
-  document.getElementById("criticalAlerts").innerText = alerts.length;
+  setEl("criticalAlerts", alerts.length);
+  document.getElementById("alertCountBadge").textContent = `${alerts.length} active`;
 
   renderAlerts(alerts);
-  renderRankingTable(latestRows);
-  renderPriorityChart(filteredData);
-  renderInsights(filteredData);
+  renderRankingTable(latest);
+  renderPriorityChart(filtered);
+  renderInsights(filtered);
 }
 
+// ── Alerts ─────────────────────────────────────────────
 function renderAlerts(alerts) {
-  const alertsContainer = document.getElementById("alertsContainer");
+  const container = document.getElementById("alertsContainer");
+  container.innerHTML = "";
 
-  alertsContainer.innerHTML = "";
-
-  if (alerts.length === 0) {
-    alertsContainer.innerHTML = "<p>No critical alerts for selected threshold.</p>";
+  if (!alerts.length) {
+    container.innerHTML = `<p class="no-alerts">✅ No critical alerts for the current threshold.</p>`;
     return;
   }
 
-  alerts.forEach(row => {
-    const alertDiv = document.createElement("div");
-    alertDiv.className = "alert-item";
-
-    alertDiv.innerHTML = `
+  alerts.sort((a, b) => a.forestPctChange - b.forestPctChange).forEach(row => {
+    const div = document.createElement("div");
+    div.className = "alert-item";
+    div.innerHTML = `
       <strong>${row.region}</strong>
-      <p>Forest cover changed by ${row.forestPctChange.toFixed(2)}% in ${row.year}.</p>
+      <p>Forest cover changed by <b>${row.forestPctChange.toFixed(2)}%</b> in ${row.year}.</p>
+      <span class="alert-badge">${getStatus(row.priorityScore).toUpperCase()}</span>
     `;
-
-    alertsContainer.appendChild(alertDiv);
+    container.appendChild(div);
   });
 }
 
+// ── Ranking Table ──────────────────────────────────────
 function renderRankingTable(rows) {
-  const tableBody = document.getElementById("rankingTableBody");
+  const tbody = document.getElementById("rankingTableBody");
+  tbody.innerHTML = "";
+  const sorted = [...rows].sort((a, b) => b.priorityScore - a.priorityScore);
 
-  tableBody.innerHTML = "";
+  // max priority for sparkbar
+  const maxScore = Math.max(...sorted.map(r => r.priorityScore));
 
-  const rankedRows = [...rows].sort((a, b) => b.priorityScore - a.priorityScore);
-
-  rankedRows.forEach((row, index) => {
-    const tr = document.createElement("tr");
-
+  sorted.forEach((row, i) => {
     const status = getStatus(row.priorityScore);
+    const fClass = row.forestPctChange < 0 ? "change-neg" : row.forestPctChange > 0 ? "change-pos" : "change-neu";
+    const bClass = row.bioPctChange    < 0 ? "change-neg" : row.bioPctChange    > 0 ? "change-pos" : "change-neu";
+    const barW   = ((row.priorityScore / maxScore) * 100).toFixed(1);
+    const barCol = status === "Critical" ? "#e53e3e" : status === "Warning" ? "#f6ad55" : "#38b2ac";
 
+    const tr = document.createElement("tr");
+    tr.dataset.region = row.region.toLowerCase();
     tr.innerHTML = `
-      <td>${index + 1}</td>
+      <td><span class="rank-num">#${i + 1}</span></td>
       <td>${row.region}</td>
       <td>${row.year}</td>
-      <td>${row.forestPctChange.toFixed(2)}%</td>
-      <td>${row.bioPctChange.toFixed(2)}%</td>
-      <td>${row.priorityScore.toFixed(2)}</td>
-      <td class="status-${status.toLowerCase()}">${status}</td>
+      <td class="${fClass}">${row.forestPctChange.toFixed(2)}%</td>
+      <td class="${bClass}">${row.bioPctChange.toFixed(2)}%</td>
+      <td>${row.species_count || "—"}</td>
+      <td>
+        <div class="sparkbar-wrap">
+          <span class="priority-val">${row.priorityScore.toFixed(2)}</span>
+          <div class="sparkbar-track">
+            <div class="sparkbar-fill" style="width:${barW}%;background:${barCol}"></div>
+          </div>
+        </div>
+      </td>
+      <td><span class="status-${status.toLowerCase()}">${status}</span></td>
     `;
-
-    tableBody.appendChild(tr);
+    tbody.appendChild(tr);
   });
 }
 
-function generateInsights(data) {
-  const latestRows = getLatestRows(data);
-
-  if (latestRows.length === 0) return [];
-
-  // 1. Worst forest loss
-  const worstLoss = latestRows.reduce((min, row) =>
-    row.forestPctChange < min.forestPctChange ? row : min
-  );
-
-  // 2. Highest priority
-  const highestPriority = latestRows.reduce((max, row) =>
-    row.priorityScore > max.priorityScore ? row : max
-  );
-
-  // 3. Count critical regions
-  const criticalCount = latestRows.filter(row => row.priorityScore >= 10).length;
-
-  // 4. Most stable region
-  const stableRegion = latestRows.reduce((min, row) =>
-    row.priorityScore < min.priorityScore ? row : min
-  );
-
-  return [
-    `${worstLoss.region} shows the highest forest loss (${worstLoss.forestPctChange.toFixed(2)}%).`,
-    `${highestPriority.region} has the highest priority score (${highestPriority.priorityScore.toFixed(2)}).`,
-    `${criticalCount} region(s) are currently in critical condition.`,
-    `${stableRegion.region} appears the most stable based on current metrics.`
-  ];
+// ── Table Search ───────────────────────────────────────
+function setupTableSearch() {
+  document.getElementById("tableSearch").addEventListener("input", function () {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll("#rankingTableBody tr").forEach(tr => {
+      tr.style.display = tr.dataset.region.includes(q) ? "" : "none";
+    });
+  });
 }
 
+// ── Insights ───────────────────────────────────────────
 function renderInsights(data) {
-  const insightList = document.getElementById("insightList");
-  const insights = generateInsights(data);
+  const list = document.getElementById("insightList");
+  list.innerHTML = "";
 
-  insightList.innerHTML = "";
+  const latest   = getLatestRows(data);
+  if (!latest.length) return;
 
-  insights.forEach(text => {
+  const worst    = latest.reduce((m, r) => r.forestPctChange < m.forestPctChange ? r : m);
+  const bestBio  = latest.reduce((m, r) => r.biodiversity_index > m.biodiversity_index ? r : m);
+  const highPri  = latest.reduce((m, r) => r.priorityScore > m.priorityScore ? r : m);
+  const stable   = latest.reduce((m, r) => r.priorityScore < m.priorityScore ? r : m);
+  const critical = latest.filter(r => r.priorityScore >= 10).length;
+  const avgLoss  = (latest.reduce((s, r) => s + r.forestPctChange, 0) / latest.length).toFixed(2);
+
+  const insights = [
+    `🌲 <b>${worst.region}</b> has the worst forest loss at <b>${worst.forestPctChange.toFixed(2)}%</b> — immediate intervention recommended.`,
+    `🎯 <b>${highPri.region}</b> leads with the highest priority score of <b>${highPri.priorityScore.toFixed(2)}</b>.`,
+    `🦋 <b>${bestBio.region}</b> has the best biodiversity index at <b>${bestBio.biodiversity_index.toFixed(1)}</b>.`,
+    `🚨 <b>${critical}</b> region${critical !== 1 ? "s are" : " is"} currently in <b>critical</b> condition.`,
+    `📊 Average forest change across all regions: <b>${avgLoss}%</b>.`,
+    `✅ <b>${stable.region}</b> is the most stable region with a priority score of <b>${stable.priorityScore.toFixed(2)}</b>.`
+  ];
+
+  insights.forEach((text, i) => {
     const li = document.createElement("li");
-    li.textContent = text;
-    insightList.appendChild(li);
+    li.innerHTML = text;
+    li.style.animationDelay = `${i * 0.07}s`;
+    list.appendChild(li);
   });
 }
 
+// ── Status ─────────────────────────────────────────────
 function getStatus(score) {
   if (score >= 10) return "Critical";
-  if (score >= 6) return "Warning";
+  if (score >= 6)  return "Warning";
   return "Stable";
 }
 
-document.getElementById("thresholdSlider").addEventListener("input", function () {
+// ── Helpers ────────────────────────────────────────────
+function hexAlpha(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// ── Event Listeners ────────────────────────────────────
+document.getElementById("thresholdSlider").addEventListener("input", () => {
   updateDashboard(window.dashboardData);
 });
-
-document.getElementById("regionFilter").addEventListener("change", function () {
+document.getElementById("regionFilter").addEventListener("change", () => {
   renderChart(window.dashboardData);
   updateDashboard(window.dashboardData);
 });
-
-document.getElementById("metricSelector").addEventListener("change", function () {
+document.getElementById("metricSelector").addEventListener("change", () => {
+  renderChart(window.dashboardData);
+});
+document.getElementById("chartTypeSelector").addEventListener("change", () => {
   renderChart(window.dashboardData);
 });
