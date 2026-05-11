@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GreenShield Conservation Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="canopy-bg">
+    <div class="tree t1"></div><div class="tree t2"></div><div class="tree t3"></div><div class="tree t4"></div><div class="tree t5"></div><div class="tree t6"></div>
+    <div class="canopy-overlay"></div>
+  </div>
+
+  <main class="report-shell">
+    <section class="report-hero glass-card">
+      <div class="header-badge">🌿 GreenShield Report</div>
+      <h1>Conservation Risk Report</h1>
+      <p>This page explains how the dashboard converts forest-cover and biodiversity data into practical conservation intelligence. Use it during presentation to explain the problem, methodology, limitations, and recommended actions.</p>
+      <div class="header-actions">
+        <a class="hero-link primary" href="index.html">← Back to Dashboard</a>
+        <a class="hero-link" href="index.html#spatialMap">Open Spatial Map</a>
+      </div>
+    </section>
+
+    <section class="report-grid">
+      <article class="report-card glass-card">
+        <h2>1. Project Purpose</h2>
+        <p>Deforestation affects biodiversity, habitat stability, and long-term ecosystem health. GreenShield Analytics helps identify which ecological zones need the most urgent attention by combining multiple environmental indicators into one decision-support view.</p>
+      </article>
+
+      <article class="report-card glass-card">
+        <h2>2. Data Used</h2>
+        <ul>
+          <li>Region-wise forest area values</li>
+          <li>Year-wise biodiversity index</li>
+          <li>Species-count indicators where available</li>
+          <li>Derived year-over-year percentage change</li>
+        </ul>
+      </article>
+
+      <article class="report-card glass-card report-wide">
+        <h2>3. Priority Score Methodology</h2>
+        <p>The dashboard uses a composite score so regions can be ranked by intervention urgency instead of looking at separate values one by one.</p>
+        <div class="formula-box">
+          Priority Score =<br>
+          0.5 × |Forest Change %| +<br>
+          0.3 × |Biodiversity Change %| +<br>
+          0.2 × (100 − Biodiversity Index)
+        </div>
+      </article>
+
+      <article class="report-card glass-card">
+        <h2>4. Severity Interpretation</h2>
+        <ul>
+          <li><b>Stable:</b> Maintain protection and continue monitoring.</li>
+          <li><b>Warning:</b> Watch closely and prepare preventive action.</li>
+          <li><b>Critical:</b> Prioritize immediate conservation intervention.</li>
+        </ul>
+      </article>
+
+      <article class="report-card glass-card">
+        <h2>5. Dashboard Features</h2>
+        <ul>
+          <li>Interactive India ecological risk map</li>
+          <li>Trend chart with Top 5 risk filtering</li>
+          <li>Priority ranking and alert system</li>
+          <li>Region comparison and detail panel</li>
+          <li>Downloadable conservation summary</li>
+        </ul>
+      </article>
+
+      <article class="report-card glass-card">
+        <h2>6. Limitations</h2>
+        <p>The project uses historical CSV data and representative map coordinates. It demonstrates environmental analytics concepts, but it is not a real-time government monitoring system or legally precise GIS boundary map.</p>
+      </article>
+
+      <article class="report-card glass-card">
+        <h2>7. Future Scope</h2>
+        <ul>
+          <li>Live forest-cover API integration</li>
+          <li>GeoJSON boundary overlays</li>
+          <li>Predictive risk forecasting</li>
+          <li>Satellite imagery comparison</li>
+          <li>Automated PDF report generation</li>
+        </ul>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

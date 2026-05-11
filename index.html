@@ -7,11 +7,17 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
 <body>
+
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loader-leaf">🌿</div>
+    <div class="loader-text">Loading forest intelligence...</div>
+  </div>
 
   <!-- Animated forest canopy background -->
   <div class="canopy-bg">
@@ -34,13 +40,17 @@
       <div class="header-inner">
         <div class="header-badge">🌿 Environmental Intelligence</div>
         <h1 class="header-title">GreenShield<br><em>Analytics</em></h1>
-        <p class="header-desc">Monitor forest loss, biodiversity decline, and conservation priority across India's critical ecological zones in real time.</p>
+        <p class="header-desc">Monitor forest loss, biodiversity decline, and conservation priority across India's critical ecological zones through interactive data analysis.</p>
         <div class="header-stats-row" id="headerLiveStats">
           <div class="hstat"><span class="hstat-num" id="hLiveRegions">—</span><span class="hstat-label">Regions</span></div>
           <div class="hstat-div"></div>
           <div class="hstat"><span class="hstat-num" id="hLiveYears">—</span><span class="hstat-label">Years of Data</span></div>
           <div class="hstat-div"></div>
           <div class="hstat"><span class="hstat-num" id="hLiveCritical">—</span><span class="hstat-label">Critical Zones</span></div>
+        </div>
+        <div class="header-actions">
+          <a class="hero-link primary" href="#spatialMap">Explore Map</a>
+          <a class="hero-link" href="report.html">Open Conservation Report</a>
         </div>
       </div>
       <div class="header-deco">
@@ -96,15 +106,16 @@
         <div class="kpi-glow"></div>
       </div>
       <div class="kpi-card kpi-6">
-        <div class="kpi-icon">✅</div>
+        <div class="kpi-icon">🍂</div>
         <div class="kpi-body">
-          <div class="kpi-label">Stable Zones</div>
-          <div class="kpi-value kpi-stable" id="stableZones">--</div>
+          <div class="kpi-label">Avg Forest Loss</div>
+          <div class="kpi-value kpi-danger" id="avgForestLoss">--</div>
         </div>
         <div class="kpi-glow"></div>
       </div>
     </section>
 
+    <div class="section-label">Overview Controls</div>
     <!-- Controls -->
     <section class="controls-card glass-card">
       <div class="controls-title">
@@ -139,9 +150,29 @@
             <option value="area">🏔️ Area Chart</option>
           </select>
         </div>
+        <div class="control-group">
+          <label>Region Scope</label>
+          <select id="regionScopeSelector">
+            <option value="top5">🔥 Top 5 Risk Regions</option>
+            <option value="all">🌐 All Regions</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Start Year</label>
+          <select id="startYearSelector"></select>
+        </div>
+        <div class="control-group">
+          <label>End Year</label>
+          <select id="endYearSelector"></select>
+        </div>
+        <div class="control-group control-actions">
+          <label>Quick Action</label>
+          <button id="resetFilters" class="reset-btn" type="button">↺ Reset Filters</button>
+        </div>
       </div>
     </section>
 
+    <div class="section-label">Trend Analysis</div>
     <!-- Charts row -->
     <div class="charts-row">
       <section class="chart-card glass-card">
@@ -165,6 +196,34 @@
       </section>
     </div>
 
+    <div class="section-label" id="spatialMap">Spatial Monitoring</div>
+    <section class="map-card glass-card">
+      <div class="map-info-panel">
+        <div class="chart-header">
+          <h2>🗺️ India Ecological Risk Map</h2>
+          <div class="chart-subtitle">Click a region marker to filter the dashboard and inspect conservation indicators</div>
+        </div>
+        <div class="map-metrics" id="mapMetrics">
+          <div><span>Mapped Zones</span><strong id="mappedZonesCount">—</strong></div>
+          <div><span>Critical</span><strong id="mappedCriticalCount">—</strong></div>
+          <div><span>Highest Risk</span><strong id="mappedTopRegion">—</strong></div>
+        </div>
+        <div class="map-guide">
+          <h3>How to read the map</h3>
+          <p>Each forest pin represents one ecological zone. Hover over any pin to reveal its nameplate; click a pin to filter the full dashboard to that region.</p>
+        </div>
+        <div class="map-hotspots">
+          <div class="map-hotspots-title">Priority hotspots</div>
+          <div id="mapRegionList" class="map-region-list"></div>
+        </div>
+      </div>
+      <div class="map-wrap">
+        <div id="indiaRiskMap"></div>
+      </div>
+    </section>
+
+
+    <div class="section-label">Risk Intelligence</div>
     <!-- Biodiversity radar + sparklines row -->
     <div class="charts-row">
       <section class="chart-card glass-card">
@@ -179,8 +238,8 @@
 
       <section class="glass-card insights-card">
         <div class="chart-header">
-          <h2>🔍 AI Insights</h2>
-          <div class="chart-subtitle">Generated from your data</div>
+          <h2>🔍 Smart Insights</h2>
+          <div class="chart-subtitle">Automatically generated from dashboard metrics</div>
         </div>
         <ul id="insightList">
           <li class="insight-loading">Analysing data...</li>
@@ -193,9 +252,51 @@
             <span class="legend-badge critical">🔴 Critical</span>
           </div>
         </div>
+        <div class="summary-box">
+          <div class="legend-title">Decision Summary</div>
+          <p id="decisionSummaryText">Generate a short conservation summary from the current filters.</p>
+          <div class="summary-actions">
+            <button id="generateSummary" class="mini-action-btn" type="button">Generate Summary</button>
+            <button id="downloadSummary" class="mini-action-btn secondary" type="button">Download .txt</button>
+          </div>
+        </div>
       </section>
     </div>
 
+    <!-- Region Detail -->
+    <section class="region-detail-card glass-card" id="regionDetailCard">
+      <div class="chart-header">
+        <h2>🌱 Region Detail</h2>
+        <div class="chart-subtitle" id="regionDetailSubtitle">Select a region to inspect conservation indicators</div>
+      </div>
+      <div class="detail-grid" id="regionDetailGrid">
+        <div class="detail-empty">Choose a region from the filter to see detailed ecological context.</div>
+      </div>
+    </section>
+
+    <div class="section-label">Region Comparison</div>
+    <section class="compare-card glass-card" id="compareCard">
+      <div class="chart-header">
+        <h2>⚖️ Compare Ecological Zones</h2>
+        <div class="chart-subtitle">Choose two regions and compare their latest conservation indicators side by side</div>
+      </div>
+      <div class="compare-controls">
+        <div class="control-group">
+          <label>First Region</label>
+          <select id="compareRegionA"></select>
+        </div>
+        <div class="control-group">
+          <label>Second Region</label>
+          <select id="compareRegionB"></select>
+        </div>
+      </div>
+      <div class="compare-output" id="compareOutput">
+        <div class="detail-empty">Comparison will appear after data loads.</div>
+      </div>
+    </section>
+
+
+    <div class="section-label">Monitoring Output</div>
     <!-- Alerts -->
     <section class="alerts-card glass-card">
       <div class="alerts-header">
@@ -207,6 +308,7 @@
       </div>
     </section>
 
+    <div class="section-label">Priority Table</div>
     <!-- Table -->
     <section class="table-card glass-card">
       <div class="table-header-row">
@@ -237,12 +339,13 @@
       <div class="footer-inner">
         <span>🌿 GreenShield Analytics</span>
         <span>Data: India Forest Survey · 2011–2022</span>
-        <span>Built for Conservation Intelligence</span>
+        <a href="report.html">View Conservation Report</a>
       </div>
     </footer>
 
   </div>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
